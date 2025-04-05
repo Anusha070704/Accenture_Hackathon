@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MyStore</title>
+  <style>
+    /* Reset default styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
+    }
+
+    /* Header Styles */
+    header {
+      background: #2874f0;
+      color: #fff;
+    }
+
+    .top-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 20px;
+    }
+
+    .top-header .logo h1 {
+      font-size: 24px;
+    }
+
+    .search-bar {
+      flex-grow: 1;
+      margin: 0 20px;
+      display: flex;
+    }
+
+    .search-bar input {
+      width: 100%;
+      padding: 8px;
+      border: none;
+      border-radius: 4px 0 0 4px;
+    }
+
+    .search-bar button {
+      padding: 8px 12px;
+      border: none;
+      background: #fff;
+      color: #2874f0;
+      border-radius: 0 4px 4px 0;
+      cursor: pointer;
+    }
+
+    .user-options a {
+      color: #fff;
+      margin-left: 15px;
+      text-decoration: none;
+    }
+
+    /* Navigation Bar */
+    nav {
+      background: #fff;
+    }
+
+    nav ul {
+      list-style: none;
+      display: flex;
+      padding: 10px 20px;
+    }
+
+    nav ul li {
+      margin-right: 20px;
+    }
+
+    nav ul li a {
+      text-decoration: none;
+      color: #2874f0;
+      font-weight: bold;
+    }
+
+    /* Container */
+    .container {
+      max-width: 1200px;
+      margin: 20px auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 4px;
+    }
+
+    /* Customer Info & Recommendations */
+    #customerInfo, #recommendations {
+      margin-top: 20px;
+    }
+
+    #recommendations li {
+      list-style: none;
+      border-bottom: 1px solid #ddd;
+      padding: 10px 0;
+    }
+
+    /* Button Styles */
+    button {
+      padding: 10px 20px;
+      background: #2874f0;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+
+    /* Footer (optional) */
+    footer {
+      text-align: center;
+      background: #333;
+      color: #fff;
+      padding: 15px 0;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="top-header">
+      <div class="logo">
+        <h1>MyStore</h1>
+      </div>
+      <div class="search-bar">
+        <input type="text" placeholder="Search for products...">
+        <button>Search</button>
+      </div>
+      <div class="user-options">
+        <a href="#">Login</a>
+        <a href="#">Cart (0)</a>
+      </div>
+    </div>
+    <nav>
+      <ul>
+        <li><a href="#">Electronics</a></li>
+        <li><a href="#">Fashion</a></li>
+        <li><a href="#">Home</a></li>
+        <li><a href="#">Appliances</a></li>
+        <li><a href="#">Books</a></li>
+        <li><a href="#">More</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <!-- Home Section -->
+    <div class="container" id="homePage">
+      <h2>Welcome to MyStore</h2>
+      <p>Enter your Customer ID to view your personalized recommendations.</p>
+      <input type="text" id="customerId" placeholder="Customer ID (e.g., C1000)">
+      <button onclick="redirectToProfile()">View Profile</button>
+    </div>
+
+    <!-- Profile Section (initially hidden) -->
+    <div class="container" id="profilePage" style="display: none;">
+      <h2>Customer Profile</h2>
+      <div id="customerInfo">
+        <!-- Customer details will be inserted here -->
+      </div>
+      <h2>Recommended Products</h2>
+      <ul id="recommendations">
+        <!-- Product recommendations will be listed here -->
+      </ul>
+      <button onclick="goBack()">Go Back</button>
+    </div>
+  </main>
+
+  <script>
+    console.log("Inline script loaded");
+
+    function redirectToProfile() {
+      const customerId = document.getElementById("customerId").value.trim();
+      if (customerId) {
+        window.location.hash = `#profile?customer=${customerId}`;
+        loadProfile(customerId);
+      } else {
+        alert("Please enter a valid Customer ID.");
+      }
+    }
+
+    function goBack() {
+      window.location.hash = "";
+      document.getElementById("profilePage").style.display = "none";
+      document.getElementById("homePage").style.display = "block";
+    }
+
+    function loadProfile(customerId) {
+      document.getElementById("homePage").style.display = "none";
+      document.getElementById("profilePage").style.display = "block";
+
+      // Fetch customer profile
+      fetch(`http://localhost:5000/customer/${customerId}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.error) {
+            document.getElementById("customerInfo").innerHTML = `<p>Error: ${data.error}</p>`;
+          } else {
+            document.getElementById("customerInfo").innerHTML = `
+              <p><strong>Customer ID:</strong> ${data.Customer_ID}</p>
+              <p><strong>Age:</strong> ${data.Age}</p>
+              <p><strong>Location:</strong> ${data.Location}</p>
+            `;
+          }
+        })
+        .catch(() => {
+          document.getElementById("customerInfo").innerHTML = "<p>Error fetching customer data.</p>";
+        });
+
+      // Fetch product recommendations
+      fetch(`http://localhost:5000/recommend/${customerId}`)
+        .then(response => response.json())
+        .then(data => {
+          const recommendationsList = document.getElementById("recommendations");
+          recommendationsList.innerHTML = "";
+          if (data.recommendations && data.recommendations.length > 0) {
+            data.recommendations.forEach(product => {
+              recommendationsList.innerHTML += `
+                <li>
+                  <strong>${product.Brand}</strong> - ${product.Category} - $${product.Price}
+                </li>
+              `;
+            });
+          } else {
+            recommendationsList.innerHTML = "<p>No recommendations available.</p>";
+          }
+        })
+        .catch(() => {
+          document.getElementById("recommendations").innerHTML = "<p>Error fetching recommendations.</p>";
+        });
+    }
+
+    // Load profile from hash if available on page load
+    window.addEventListener("DOMContentLoaded", () => {
+      const hash = window.location.hash;
+      if (hash.startsWith("#profile?customer=")) {
+        const customerId = new URLSearchParams(hash.split("?")[1]).get("customer");
+        if (customerId) {
+          loadProfile(customerId);
+        }
+      }
+    });
+  </script>
+</body>
+</html>
