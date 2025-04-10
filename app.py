@@ -1,11 +1,15 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, render_template
 from flask_cors import CORS
 from customer_agent import CustomerAgent
 from product_agent import ProductAgent
 from recommendation_engine import RecommendationEngineAgent
 
 app = Flask(__name__)
-CORS(app)  # Enables cross-origin requests from your frontend
+CORS(app)
+
+@app.route("/")
+def index():
+    return render_template("index.html")
 
 @app.route("/customer/<customer_id>", methods=["GET"])
 def get_customer(customer_id):
